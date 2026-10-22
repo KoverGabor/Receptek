@@ -15,6 +15,7 @@ namespace ReceptekApi.Controllers
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                                 ?? "Server=localhost;Database=receptek;User=root;Password=;";
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -42,4 +43,34 @@ namespace ReceptekApi.Controllers
 
             return Ok(list);
         }
+
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = "SELECT * FROM hozzavalo WHERE Id = @id";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var item = new Hozzavalo
+                {
+                    Id = reader.GetInt32("Id"),
+                    IngredientName = reader.GetString("IngredientName"),
+                    Quantity = reader.GetString("Quantity"),
+                    Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString("Description"),
+                    AddedTime = reader.GetDateTime("AddedTime"),
+                    UpdateTime = reader.GetDateTime("UpdateTime"),
+                    SzakacsId = reader.GetInt32("SzakacsId")
+                };
+                return Ok(item);
+            }
+
+            return NotFound(new { message = "Hozzávaló nem található." });
+        }
+    }
 }
