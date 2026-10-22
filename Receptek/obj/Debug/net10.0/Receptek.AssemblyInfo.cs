@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Receptek")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87836e17579128398164afa286906b1061b1930a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c10577f739c23208eb97c7d9816391cef9d8d6ae")]
 [assembly: System.Reflection.AssemblyProductAttribute("Receptek")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Receptek")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

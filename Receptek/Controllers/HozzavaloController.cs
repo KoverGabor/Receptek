@@ -117,5 +117,112 @@ namespace ReceptekApi.Controllers
 
             return Ok(new { message = "Sikeresen frissítve." });
         }
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = "DELETE FROM hozzavalo WHERE Id = @id";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            int rowsAffected = await cmd.ExecuteNonQueryAsync();
+            if (rowsAffected == 0)
+            {
+                return NotFound(new { message = "A törlendő elem nem található." });
+            }
+
+            return Ok(new { message = "Sikeresen törölve." });
+        }
+        [HttpGet("szakacs/{szakacsId:int}")]
+        public async Task<IActionResult> GetSzakacsData(int szakacsId)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = "SELECT Name, Email FROM szakacs WHERE Id = @id";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", szakacsId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return Ok(new
+                {
+                    Name = reader.GetString("Name"),
+                    Email = reader.GetString("Email")
+                });
+            }
+
+            return NotFound(new { message = "Szakács nem található." });
+        }
+        [HttpGet("szakacs/{szakacsId:int}/hozzavalok")]
+        public async Task<IActionResult> GetSzakacsWithIngredients(int szakacsId)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"SELECT s.Name AS SzakacsName, h.IngredientName, h.Quantity 
+                           FROM szakacs s 
+                           LEFT JOIN hozzavalo h ON s.Id = h.SzakacsId 
+                           WHERE s.Id = @id";
+
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", szakacsId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            string? szakacsName = null;
+            var ingredients = new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                szakacsName ??= reader.GetString("SzakacsName");
+                if (!reader.IsDBNull(reader.GetOrdinal("IngredientName")))
+                {
+                    ingredients.Add(new
+                    {
+                        IngredientName = reader.GetString("IngredientName"),
+                        Quantity = reader.GetString("Quantity")
+                    });
+                }
+            }
+
+            if (szakacsName == null)
+            {
+                return NotFound(new { message = "Szakács nem található." });
+            }
+
+            return Ok(new
+            {
+                SzakacsName = szakacsName,
+                Ingredients = ingredients
+            });
+        }
+        [HttpGet("count")]
+        public async Task<IActionResult> GetTotalCount()
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = "SELECT COUNT(*) FROM hozzavalo";
+            using var cmd = new MySqlCommand(sql, conn);
+
+            var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return Ok(new { TotalCount = count });
+        }
+        [HttpGet("szakacs/{szakacsId:int}/count")]
+        public async Task<IActionResult> GetCountBySzakacs(int szakacsId)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = "SELECT COUNT(*) FROM hozzavalo WHERE SzakacsId = @id";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", szakacsId);
+
+            var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return Ok(new { SzakacsId = szakacsId, IngredientCount = count });
+        }
     }
 }
