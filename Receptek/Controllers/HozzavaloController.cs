@@ -72,5 +72,25 @@ namespace ReceptekApi.Controllers
 
             return NotFound(new { message = "Hozzávaló nem található." });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] HozzavaloDto dto)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"INSERT INTO hozzavalo (IngredientName, Quantity, Description, AddedTime, UpdateTime, SzakacsId) 
+                           VALUES (@name, @qty, @desc, NOW(), NOW(), @szakacsId);
+                           SELECT LAST_INSERT_ID();";
+
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@name", dto.IngredientName);
+            cmd.Parameters.AddWithValue("@qty", dto.Quantity);
+            cmd.Parameters.AddWithValue("@desc", (object?)dto.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@szakacsId", dto.SzakacsId);
+
+            var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId, message = "Sikeresen hozzáadva." });
+        }
     }
 }
