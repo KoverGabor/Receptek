@@ -27,6 +27,11 @@ SET time_zone = "+00:00";
 -- Tábla szerkezet ehhez a táblához `hozzavalo`
 --
 
+CREATE DATABASE IF NOT EXISTS receptek
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE receptek;
+
 DROP TABLE IF EXISTS `hozzavalo`;
 CREATE TABLE IF NOT EXISTS `hozzavalo` (
   `id` int NOT NULL AUTO_INCREMENT,
