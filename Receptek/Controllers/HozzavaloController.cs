@@ -92,5 +92,30 @@ namespace ReceptekApi.Controllers
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
             return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId, message = "Sikeresen hozzáadva." });
         }
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] HozzavaloDto dto)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string sql = @"UPDATE hozzavalo 
+                           SET IngredientName = @name, Quantity = @qty, Description = @desc, UpdateTime = NOW(), SzakacsId = @szakacsId 
+                           WHERE Id = @id";
+
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", dto.IngredientName);
+            cmd.Parameters.AddWithValue("@qty", dto.Quantity);
+            cmd.Parameters.AddWithValue("@desc", (object?)dto.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@szakacsId", dto.SzakacsId);
+
+            int rowsAffected = await cmd.ExecuteNonQueryAsync();
+            if (rowsAffected == 0)
+            {
+                return NotFound(new { message = "Módosítandó hozzávaló nem található." });
+            }
+
+            return Ok(new { message = "Sikeresen frissítve." });
+        }
     }
 }
